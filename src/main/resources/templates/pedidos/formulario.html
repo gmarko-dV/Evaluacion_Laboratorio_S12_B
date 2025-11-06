@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${pedido.idPedido != null} ? 'Editar Pedido' : 'Nuevo Pedido'">Pedido - Sabor Gourmet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        .detalle-item {
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard"><i class="bi bi-cup-hot"></i> Sabor Gourmet</a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3" sec:authentication="name"></span>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-right"></i> Salir</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2 th:text="${pedido.idPedido != null} ? 'Editar Pedido' : 'Nuevo Pedido'"></h2>
+        
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/pedidos/guardar}" th:object="${pedido}" method="post" id="pedidoForm">
+                    <input type="hidden" th:field="*{idPedido}"/>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="mesa" class="form-label">Mesa <span class="text-danger">*</span></label>
+                            <select class="form-select" id="mesa" th:field="*{mesa}" required>
+                                <option value="">Seleccione una mesa...</option>
+                                <option th:each="mesa : ${mesas}" 
+                                        th:value="${mesa.idMesa}" 
+                                        th:text="${mesa.numero + ' (Capacidad: ' + mesa.capacidad + ')'}"></option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="cliente" class="form-label">Cliente (Opcional)</label>
+                            <select class="form-select" id="cliente" th:field="*{cliente}">
+                                <option value="">Sin cliente registrado</option>
+                                <option th:each="cliente : ${clientes}" 
+                                        th:value="${cliente.idCliente}" 
+                                        th:text="${cliente.nombreCompleto + ' - ' + cliente.dni}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h5 class="mb-3">Platos del Pedido</h5>
+                    
+                    <div id="detalles-container">
+                        <div class="detalle-item" data-index="0">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <label class="form-label">Plato</label>
+                                    <select class="form-select plato-select" name="platoIds" required>
+                                        <option value="">Seleccione un plato...</option>
+                                        <option th:each="plato : ${platos}" 
+                                                th:value="${plato.idPlato}" 
+                                                th:text="${plato.nombre + ' - S/ ' + #numbers.formatDecimal(plato.precio, 1, 2)}"
+                                                th:data-precio="${plato.precio}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Cantidad</label>
+                                    <input type="number" class="form-control cantidad-input" 
+                                           name="cantidades" min="1" value="1" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Subtotal</label>
+                                    <input type="text" class="form-control subtotal-display" 
+                                           value="S/ 0.00" readonly>
+                                </div>
+                                <div class="col-md-1 d-flex align-items-end">
+                                    <button type="button" class="btn btn-danger btn-sm remove-detalle" style="display: none;">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn btn-outline-primary mt-2" id="agregar-detalle">
+                        <i class="bi bi-plus-circle"></i> Agregar Plato
+                    </button>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-12 text-end">
+                            <h5>Total: <span id="total-pedido">S/ 0.00</span></h5>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Guardar Pedido
+                        </button>
+                        <a href="/pedidos" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let detalleIndex = 1;
+        
+        // Agregar nuevo detalle
+        document.getElementById('agregar-detalle').addEventListener('click', function() {
+            const container = document.getElementById('detalles-container');
+            const template = container.querySelector('.detalle-item').cloneNode(true);
+            
+            template.setAttribute('data-index', detalleIndex);
+            template.querySelector('.plato-select').name = 'platoIds';
+            template.querySelector('.cantidad-input').name = 'cantidades';
+            template.querySelector('.cantidad-input').value = 1;
+            template.querySelector('.subtotal-display').value = 'S/ 0.00';
+            template.querySelector('.plato-select').value = '';
+            template.querySelector('.remove-detalle').style.display = 'block';
+            
+            container.appendChild(template);
+            detalleIndex++;
+            
+            // Actualizar eventos del nuevo detalle
+            updateDetalleEvents(template);
+        });
+        
+        // Actualizar eventos de un detalle
+        function updateDetalleEvents(detalleElement) {
+            const platoSelect = detalleElement.querySelector('.plato-select');
+            const cantidadInput = detalleElement.querySelector('.cantidad-input');
+            const subtotalDisplay = detalleElement.querySelector('.subtotal-display');
+            const removeBtn = detalleElement.querySelector('.remove-detalle');
+            
+            // Calcular subtotal
+            function calcularSubtotal() {
+                const precio = parseFloat(platoSelect.options[platoSelect.selectedIndex]?.dataset.precio || 0);
+                const cantidad = parseInt(cantidadInput.value || 0);
+                const subtotal = precio * cantidad;
+                subtotalDisplay.value = 'S/ ' + subtotal.toFixed(2);
+                calcularTotal();
+            }
+            
+            platoSelect.addEventListener('change', calcularSubtotal);
+            cantidadInput.addEventListener('input', calcularSubtotal);
+            
+            // Remover detalle
+            removeBtn.addEventListener('click', function() {
+                detalleElement.remove();
+                calcularTotal();
+            });
+        }
+        
+        // Calcular total
+        function calcularTotal() {
+            let total = 0;
+            document.querySelectorAll('.subtotal-display').forEach(display => {
+                const valor = display.value.replace('S/ ', '').trim();
+                total += parseFloat(valor || 0);
+            });
+            document.getElementById('total-pedido').textContent = 'S/ ' + total.toFixed(2);
+        }
+        
+        // Inicializar eventos del primer detalle
+        document.querySelectorAll('.detalle-item').forEach(item => {
+            updateDetalleEvents(item);
+        });
+        
+        // Validar formulario antes de enviar
+        document.getElementById('pedidoForm').addEventListener('submit', function(e) {
+            const detalles = document.querySelectorAll('.detalle-item');
+            let tieneDetalles = false;
+            
+            detalles.forEach(detalle => {
+                const plato = detalle.querySelector('.plato-select').value;
+                if (plato) {
+                    tieneDetalles = true;
+                }
+            });
+            
+            if (!tieneDetalles) {
+                e.preventDefault();
+                alert('Debe agregar al menos un plato al pedido');
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>
+
