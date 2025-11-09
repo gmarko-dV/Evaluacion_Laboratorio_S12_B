@@ -16,7 +16,7 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #6F4E37;">
         <div class="container-fluid">
             <a class="navbar-brand" href="/dashboard"><i class="bi bi-cup-hot"></i> Sabor Gourmet</a>
             <div class="navbar-nav ms-auto">
@@ -38,21 +38,23 @@
                     
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            <label for="mesa" class="form-label">Mesa <span class="text-danger">*</span></label>
-                            <select class="form-select" id="mesa" th:field="*{mesa}" required>
+                            <label for="idMesa" class="form-label">Mesa <span class="text-danger">*</span></label>
+                            <select class="form-select" id="idMesa" name="idMesa" required>
                                 <option value="">Seleccione una mesa...</option>
                                 <option th:each="mesa : ${mesas}" 
                                         th:value="${mesa.idMesa}" 
+                                        th:selected="${pedido.mesa != null && pedido.mesa.idMesa == mesa.idMesa}"
                                         th:text="${mesa.numero + ' (Capacidad: ' + mesa.capacidad + ')'}"></option>
                             </select>
                         </div>
                         
                         <div class="col-md-6">
-                            <label for="cliente" class="form-label">Cliente (Opcional)</label>
-                            <select class="form-select" id="cliente" th:field="*{cliente}">
+                            <label for="idCliente" class="form-label">Cliente (Opcional)</label>
+                            <select class="form-select" id="idCliente" name="idCliente">
                                 <option value="">Sin cliente registrado</option>
                                 <option th:each="cliente : ${clientes}" 
                                         th:value="${cliente.idCliente}" 
+                                        th:selected="${pedido.cliente != null && pedido.cliente.idCliente == cliente.idCliente}"
                                         th:text="${cliente.nombreCompleto + ' - ' + cliente.dni}"></option>
                             </select>
                         </div>
@@ -94,7 +96,7 @@
                         </div>
                     </div>
                     
-                    <button type="button" class="btn btn-outline-primary mt-2" id="agregar-detalle">
+                    <button type="button" class="btn mt-2" style="border-color: #6F4E37; color: #6F4E37;" id="agregar-detalle">
                         <i class="bi bi-plus-circle"></i> Agregar Plato
                     </button>
                     
@@ -107,7 +109,7 @@
                     </div>
                     
                     <div class="mt-4">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn" style="background-color: #6F4E37; color: white; border-color: #6F4E37;">
                             <i class="bi bi-save"></i> Guardar Pedido
                         </button>
                         <a href="/pedidos" class="btn btn-secondary">

@@ -59,27 +59,67 @@ public class PedidoController {
     
     @PostMapping("/guardar")
     public String guardar(@ModelAttribute Pedido pedido,
+                         @RequestParam(required = false) Integer idMesa,
+                         @RequestParam(required = false) Integer idCliente,
                          @RequestParam(required = false) Integer[] platoIds,
                          @RequestParam(required = false) Integer[] cantidades,
                          RedirectAttributes redirectAttributes) {
         try {
-            // Si hay detalles desde el formulario
+            // Validar que se haya seleccionado una mesa
+            if (idMesa == null) {
+                redirectAttributes.addFlashAttribute("error", "Debe seleccionar una mesa");
+                return "redirect:/pedidos/nuevo";
+            }
+            
+            // Buscar y asignar la mesa
+            mesaService.buscarPorId(idMesa).ifPresentOrElse(
+                pedido::setMesa,
+                () -> {
+                    throw new RuntimeException("Mesa no encontrada");
+                }
+            );
+            
+            // Buscar y asignar el cliente (opcional)
+            if (idCliente != null && idCliente > 0) {
+                clienteService.buscarPorId(idCliente).ifPresent(pedido::setCliente);
+            } else {
+                pedido.setCliente(null);
+            }
+            
+            // Inicializar fecha y estado si es un pedido nuevo
+            if (pedido.getIdPedido() == null) {
+                pedido.setFechaHora(java.time.LocalDateTime.now());
+                pedido.setEstado(Pedido.EstadoPedido.PENDIENTE);
+            }
+            
+            // Limpiar detalles existentes
+            pedido.getDetalles().clear();
+            
+            // Agregar detalles desde el formulario
             if (platoIds != null && cantidades != null && platoIds.length == cantidades.length) {
-                pedido.getDetalles().clear();
                 for (int i = 0; i < platoIds.length; i++) {
-                    if (platoIds[i] != null && cantidades[i] != null && cantidades[i] > 0) {
-                        platoService.buscarPorId(platoIds[i]).ifPresent(plato -> {
-                            DetallePedido detalle = new DetallePedido(plato, cantidades[i]);
+                    final Integer platoId = platoIds[i];
+                    final Integer cantidad = cantidades[i];
+                    if (platoId != null && cantidad != null && cantidad > 0) {
+                        platoService.buscarPorId(platoId).ifPresent(plato -> {
+                            DetallePedido detalle = new DetallePedido(plato, cantidad);
                             pedido.agregarDetalle(detalle);
                         });
                     }
                 }
             }
             
+            // Validar que tenga al menos un detalle
+            if (pedido.getDetalles().isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Debe agregar al menos un plato al pedido");
+                return "redirect:/pedidos/nuevo";
+            }
+            
             pedidoService.guardar(pedido);
             redirectAttributes.addFlashAttribute("success", "Pedido guardado correctamente");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error al guardar el pedido: " + e.getMessage());
+            e.printStackTrace();
         }
         return "redirect:/pedidos";
     }

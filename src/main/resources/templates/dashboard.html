@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #6F4E37;">
         <div class="container-fluid">
             <a class="navbar-brand" href="/dashboard">
                 <i class="bi bi-cup-hot"></i> Sabor Gourmet
@@ -29,12 +29,12 @@
         
         <div class="row">
             <div class="col-md-3 mb-4" sec:authorize="hasRole('ADMIN')">
-                <div class="card text-white bg-primary">
+                <div class="card text-white" style="background-color: #8B6F47;">
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="card-title">Clientes</h6>
-                                <h3>0</h3>
+                                <h3 th:text="${totalClientes}">0</h3>
                             </div>
                             <i class="bi bi-people fs-1"></i>
                         </div>
@@ -44,12 +44,12 @@
             </div>
             
             <div class="col-md-3 mb-4" sec:authorize="hasAnyRole('MOZO','COCINERO','ADMIN')">
-                <div class="card text-white bg-success">
+                <div class="card text-white" style="background-color: #A0826D;">
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="card-title">Pedidos</h6>
-                                <h3>0</h3>
+                                <h3 th:text="${totalPedidos}">0</h3>
                             </div>
                             <i class="bi bi-cart fs-1"></i>
                         </div>
@@ -59,12 +59,12 @@
             </div>
             
             <div class="col-md-3 mb-4" sec:authorize="hasAnyRole('CAJERO','ADMIN')">
-                <div class="card text-white bg-warning">
+                <div class="card text-white" style="background-color: #C9A961;">
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="card-title">Ventas</h6>
-                                <h3>0</h3>
+                                <h3 th:text="${totalVentas}">0</h3>
                             </div>
                             <i class="bi bi-currency-dollar fs-1"></i>
                         </div>
@@ -73,17 +73,98 @@
                 </div>
             </div>
             
+            <div class="col-md-3 mb-4" sec:authorize="hasAnyRole('CAJERO','ADMIN')">
+                <div class="card text-white" style="background-color: #D4A574;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Pedidos Cerrados</h6>
+                                <h3 th:text="${pedidosCerrados}">0</h3>
+                            </div>
+                            <i class="bi bi-check-circle fs-1"></i>
+                        </div>
+                        <small class="text-white-50">Pendientes de facturación</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-4" sec:authorize="hasAnyRole('CAJERO','ADMIN')">
+                <div class="card text-white" style="background-color: #B8860B;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Ventas Pagadas</h6>
+                                <h3 th:text="${ventasPagadas}">0</h3>
+                            </div>
+                            <i class="bi bi-cash-coin fs-1"></i>
+                        </div>
+                        <small class="text-white-50">Facturas pagadas</small>
+                    </div>
+                </div>
+            </div>
+            
             <div class="col-md-3 mb-4" sec:authorize="hasRole('ADMIN')">
-                <div class="card text-white bg-info">
+                <div class="card text-white" style="background-color: #6F4E37;">
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="card-title">Mesas</h6>
-                                <h3>0</h3>
+                                <h3 th:text="${totalMesas}">0</h3>
                             </div>
                             <i class="bi bi-table fs-1"></i>
                         </div>
                         <a href="/admin/mesas" class="text-white text-decoration-none">Ver más →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sección específica para Cajero: Pedidos pendientes de facturación -->
+        <div class="row mt-4" sec:authorize="hasAnyRole('CAJERO','ADMIN')">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header" style="background-color: #C9A961; color: white;">
+                        <h5 class="mb-0"><i class="bi bi-receipt-cutoff"></i> Pedidos Pendientes de Facturación</h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${#lists.isEmpty(pedidosCerradosList)}" class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> No hay pedidos cerrados pendientes de facturación
+                        </div>
+                        <div th:if="${!#lists.isEmpty(pedidosCerradosList)}">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID Pedido</th>
+                                            <th>Mesa</th>
+                                            <th>Cliente</th>
+                                            <th>Fecha</th>
+                                            <th>Total</th>
+                                            <th>Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="pedido : ${pedidosCerradosList}">
+                                            <td th:text="${pedido.idPedido}"></td>
+                                            <td th:text="${pedido.mesa?.numero}"></td>
+                                            <td th:text="${pedido.cliente != null ? pedido.cliente.nombreCompleto : 'No registrado'}"></td>
+                                            <td th:text="${#temporals.format(pedido.fechaHora, 'dd/MM/yyyy HH:mm')}"></td>
+                                            <td>
+                                                <strong>
+                                                    S/ <span th:text="${#numbers.formatDecimal(totalesPedidos[pedido.idPedido] ?: 0, 1, 2)}">0.00</span>
+                                                </strong>
+                                            </td>
+                                            <td>
+                                                <a th:href="@{/ventas/nueva/{id}(id=${pedido.idPedido})}" 
+                                                   class="btn btn-sm btn-success">
+                                                    <i class="bi bi-receipt"></i> Generar Factura
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -98,32 +179,32 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-3 mb-3" sec:authorize="hasRole('ADMIN')">
-                                <a href="/admin/clientes" class="btn btn-outline-primary w-100">
+                                <a href="/admin/clientes" class="btn w-100" style="border-color: #6F4E37; color: #6F4E37;">
                                     <i class="bi bi-people"></i> Gestión de Clientes
                                 </a>
                             </div>
                             <div class="col-md-3 mb-3" sec:authorize="hasRole('ADMIN')">
-                                <a href="/admin/mesas" class="btn btn-outline-primary w-100">
+                                <a href="/admin/mesas" class="btn w-100" style="border-color: #6F4E37; color: #6F4E37;">
                                     <i class="bi bi-table"></i> Gestión de Mesas
                                 </a>
                             </div>
                             <div class="col-md-3 mb-3" sec:authorize="hasRole('ADMIN')">
-                                <a href="/admin/platos" class="btn btn-outline-primary w-100">
+                                <a href="/admin/platos" class="btn w-100" style="border-color: #6F4E37; color: #6F4E37;">
                                     <i class="bi bi-menu-button"></i> Gestión de Platos
                                 </a>
                             </div>
                             <div class="col-md-3 mb-3" sec:authorize="hasAnyRole('MOZO','COCINERO','ADMIN')">
-                                <a href="/pedidos" class="btn btn-outline-success w-100">
+                                <a href="/pedidos" class="btn w-100" style="border-color: #8B6F47; color: #8B6F47;">
                                     <i class="bi bi-cart"></i> Gestión de Pedidos
                                 </a>
                             </div>
                             <div class="col-md-3 mb-3" sec:authorize="hasAnyRole('CAJERO','ADMIN')">
-                                <a href="/ventas" class="btn btn-outline-warning w-100">
+                                <a href="/ventas" class="btn w-100" style="border-color: #C9A961; color: #C9A961;">
                                     <i class="bi bi-receipt"></i> Gestión de Ventas
                                 </a>
                             </div>
                             <div class="col-md-3 mb-3" sec:authorize="hasRole('ADMIN')">
-                                <a href="/admin/usuarios" class="btn btn-outline-info w-100">
+                                <a href="/admin/usuarios" class="btn w-100" style="border-color: #6F4E37; color: #6F4E37;">
                                     <i class="bi bi-person-gear"></i> Gestión de Usuarios
                                 </a>
                             </div>

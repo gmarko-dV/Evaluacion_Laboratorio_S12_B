@@ -9,6 +9,7 @@ import pe.edu.uni.saborgourmet.entity.Pedido;
 import pe.edu.uni.saborgourmet.service.FacturaService;
 import pe.edu.uni.saborgourmet.service.PedidoService;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 @Controller
@@ -30,14 +31,38 @@ public class VentaController {
     }
     
     @GetMapping("/nueva/{idPedido}")
-    public String nueva(@PathVariable Integer idPedido, Model model) {
+    public String nueva(@PathVariable Integer idPedido, Model model, RedirectAttributes redirectAttributes) {
         Optional<Pedido> pedido = pedidoService.buscarPorId(idPedido);
-        if (pedido.isPresent() && pedido.get().getEstado() == Pedido.EstadoPedido.CERRADO) {
-            model.addAttribute("pedido", pedido.get());
-            model.addAttribute("metodosPago", Factura.MetodoPago.values());
-            return "ventas/formulario";
+        if (!pedido.isPresent()) {
+            redirectAttributes.addFlashAttribute("error", "Pedido no encontrado");
+            return "redirect:/ventas";
         }
-        return "redirect:/ventas";
+        
+        if (pedido.get().getEstado() != Pedido.EstadoPedido.CERRADO) {
+            redirectAttributes.addFlashAttribute("error", "El pedido debe estar cerrado para generar la factura");
+            return "redirect:/ventas";
+        }
+        
+        // Verificar si ya existe una factura para este pedido
+        boolean yaFacturado = facturaService.listarTodos().stream()
+            .anyMatch(f -> f.getPedido().getIdPedido().equals(idPedido));
+        
+        if (yaFacturado) {
+            redirectAttributes.addFlashAttribute("error", "Este pedido ya tiene una factura generada");
+            return "redirect:/ventas";
+        }
+        
+        Pedido pedidoObj = pedido.get();
+        model.addAttribute("pedido", pedidoObj);
+        model.addAttribute("metodosPago", Factura.MetodoPago.values());
+        
+        // Calcular total del pedido
+        BigDecimal total = pedidoObj.getDetalles().stream()
+            .map(pe.edu.uni.saborgourmet.entity.DetallePedido::getSubtotal)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        model.addAttribute("totalPedido", total);
+        
+        return "ventas/formulario";
     }
     
     @PostMapping("/generar")
