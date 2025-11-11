@@ -217,11 +217,6 @@ java -jar target/sabor-gourmet-1.0.0.jar
 
 ---
 
-## 📸 Capturas
-
-> *Próximamente: Capturas de pantalla del sistema*
-
----
 
 ## ⚠️ Notas Importantes
 
@@ -230,15 +225,6 @@ java -jar target/sabor-gourmet-1.0.0.jar
 - 🔐 Autenticación requerida para todas las rutas (excepto `/login`)
 - 👥 Los roles determinan el acceso a funcionalidades
 
----
-
-## 📚 Documentación Adicional
-
-- [Guía de Usuario](docs/guia-usuario.md) - *Próximamente*
-- [API Documentation](docs/api.md) - *Próximamente*
-- [Manual de Despliegue](docs/despliegue.md) - *Próximamente*
-
----
 
 ## 👨‍💻 Desarrollo
 
@@ -253,19 +239,6 @@ java -jar target/sabor-gourmet-1.0.0.jar
 - ✅ Validación de formularios
 - ✅ Manejo de excepciones
 
----
-
-## 📄 Licencia
-
-Este proyecto es de **uso educativo** y está destinado para fines académicos.
-
----
-
-<div align="center">
-
-**Desarrollado con ❤️ usando Spring Boot**
-
-⭐ Si te gusta este proyecto, dale una estrella
 
 </div>
 
